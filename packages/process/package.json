@@ -1,0 +1,44 @@
+{
+  "name": "@effect-ts/process",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": "https://github.com/Effect-TS/process.git",
+  "homepage": "https://www.matechs.com",
+  "private": false,
+  "scripts": {
+    "clean": "rimraf build tsbuildinfo",
+    "build:lib": "ttsc --build  tsconfig.build.json && build-utils package",
+    "build:es6": "ttsc --build  tsconfig.es6.json && babel build/esm/ -d build/esm/ -s --plugins annotate-pure-calls && build-utils package-esm",
+    "build:post-process": "build-utils rewrite-source-maps && build-utils rewrite-locals && yarn prettier:lib",
+    "build": "yarn run build:lib && yarn run build:es6 && yarn run build:post-process",
+    "lint": "eslint . --ext .ts,.tsx",
+    "autofix": "yarn prettier && yarn lint --fix && yarn prettier",
+    "prettier": "prettier --write \"./{src,test,demo}/**/*.ts\"",
+    "prettier:lib": "prettier --write \"./build/**/*.js\"",
+    "tc": "tsc --noEmit",
+    "demo": "ts-node -r tsconfig-paths/register"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "build"
+  },
+  "sideEffects": false,
+  "config": {
+    "modules": [
+      "Command",
+      "CommandError",
+      "ExitCode",
+      "Internal/SystemError",
+      "Internal/Transducer",
+      "Process",
+      "ProcessInput",
+      "ProcessOutput",
+      "ProcessStream"
+    ]
+  },
+  "peerDependencies": {
+    "@effect-ts/core": "^0.43.0",
+    "@effect-ts/node": "^0.28.0"
+  },
+  "dependencies": {}
+}
