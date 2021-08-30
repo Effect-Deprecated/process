@@ -220,8 +220,8 @@ describe("Command", () => {
           Command.run(command),
           T.chain((process) =>
             T.zipPar_(
-              ProcessStream.string(Process.stdout(process)),
-              ProcessStream.string(Process.stderr(process))
+              ProcessStream.string(process.stdout),
+              ProcessStream.string(process.stderr)
             )
           )
         )
@@ -260,30 +260,33 @@ describe("Command", () => {
       )
     }))
 
-  // it("should merge stderr into stdout when redirectErrorStream is true", () =>
-  //   T.gen(function* (_) {
-  //     const command = pipe(
-  //       Command.command("./both-streams-test.sh"),
-  //       Command.workingDirectory("packages/process/test/bash"),
-  //       Command.redirectErrorStream(true)
-  //     )
-  //
-  //     const { stderr, stdout } = yield* _(
-  //       pipe(
-  //         T.do,
-  //         T.bind("process", () => Command.run(command)),
-  //         T.bind("stdout", ({ process }) =>
-  //           ProcessStream.string(Process.stdout(process))
-  //         ),
-  //         T.bind("stderr", ({ process }) =>
-  //           ProcessStream.string(Process.stderr(process))
-  //         )
-  //       )
-  //     )
-  //
-  //     expect(stderr).toBe("")
-  //     expect(stdout).toBe("stdout1\nstderr1\nstdout2\nstderr\n")
-  //   }))
+  it("should merge stderr into stdout when redirectErrorStream is true", () =>
+    T.gen(function* (_) {
+      const command = pipe(
+        Command.command("./both-streams-test.sh"),
+        Command.workingDirectory("packages/process/test/bash"),
+        Command.redirectErrorStream(true)
+      )
+
+      const output = yield* _(
+        pipe(
+          Command.run(command),
+          T.chain((process) =>
+            T.zipPar_(
+              ProcessStream.string(process.stdout),
+              ProcessStream.string(process.stderr)
+            )
+          )
+        )
+      )
+
+      const stdout = output.get(0)
+      const stderr = output.get(1)
+
+      expect(stderr).toBe("")
+      expect(stdout).toContain("stdout1\nstdout2")
+      expect(stdout).toContain("stderr1\nstderr2\n")
+    }))
 
   it("should be able to kill a running process", () =>
     T.gen(function* (_) {

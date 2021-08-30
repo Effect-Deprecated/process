@@ -1,17 +1,20 @@
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as T from "@effect-ts/core/Effect"
+import * as S from "@effect-ts/core/Effect/Stream"
+import type { Sink } from "@effect-ts/core/Effect/Stream/Sink"
 import * as O from "@effect-ts/core/Option"
+import type { Byte } from "@effect-ts/node/Byte"
+import * as NS from "@effect-ts/node/Stream"
 import { constUndefined } from "@effect-ts/system/Function"
 import type { ChildProcessWithoutNullStreams as NodeJSChildProcess } from "child_process"
 import { spawn } from "child_process"
-import { env } from "process"
 import type { Stream as NodeJSStream } from "stream"
 
 import type { StandardCommand } from "../Command"
 import * as CE from "../CommandError"
 import * as EC from "../ExitCode"
 import * as PO from "../ProcessOutput"
-import { ProcessStream } from "../ProcessStream"
+import * as PS from "../ProcessStream"
 
 // -----------------------------------------------------------------------------
 // Model
@@ -21,7 +24,12 @@ import { ProcessStream } from "../ProcessStream"
  * Represents a handle to a running NodeJS `ChildProcess`.
  */
 export class Process {
-  constructor(readonly process: NodeJSChildProcess) {}
+  constructor(
+    readonly process: NodeJSChildProcess,
+    readonly stdin: Sink<unknown, NS.WritableError, Byte, never, void>,
+    readonly stderr: S.IO<CE.CommandError, Byte>,
+    readonly stdout: S.IO<CE.CommandError, Byte>
+  ) {}
 }
 
 /**
@@ -47,10 +55,10 @@ export type StdioOption =
 export function start(command: StandardCommand): T.IO<CE.CommandError, Process> {
   return T.refineOrDie_(
     T.chain_(
-      T.succeedWith(() => env),
+      T.succeedWith(() => process.env),
       (env) =>
         T.effectAsyncInterrupt((cb) => {
-          const process = spawn(command.command, C.toArray(command.args), {
+          const proc = spawn(command.command, C.toArray(command.args), {
             stdio: [
               "pipe",
               PO.toStdioOption(command.stdout),
@@ -60,20 +68,43 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
             env: { ...env, ...Object.fromEntries(command.env) }
           })
 
-          process.on("error", (err) => {
+          proc.on("error", (err: Error) => {
             cb(T.fail(err))
           })
 
-          if (process.pid) {
-            cb(T.succeed(new Process(process as any)))
+          // If the process is assigned a process identifier, then we know it
+          // was spawned successfully
+          if (proc.pid) {
+            if (proc.stdin == null) {
+              cb(T.die(new Error(`Invalid process: stdin stream not found`)))
+            }
+            if (proc.stderr == null) {
+              cb(T.die(new Error(`Invalid process: stderr stream not found`)))
+            }
+            if (proc.stdout == null) {
+              cb(T.die(new Error(`Invalid process: stdout stream not found`)))
+            }
+
+            /* eslint-disable @typescript-eslint/no-non-null-assertion */
+            const stdin = NS.sinkFromWritable(() => proc.stdin!)
+            const stderr = PS.fromReadableStream(() => proc.stderr!)
+            const stdout = PS.fromReadableStream(() => proc.stdout!)
+            /* eslint-enable  @typescript-eslint/no-non-null-assertion */
+
+            if (command.redirectErrorStream) {
+              const merged = S.merge_(stdout, stderr)
+              cb(T.succeed(new Process(proc as any, stdin, S.empty, merged)))
+            } else {
+              cb(T.succeed(new Process(proc as any, stdin, stderr, stdout)))
+            }
           }
 
           return T.effectAsync((cb) => {
-            if (process.pid) {
-              process.kill("SIGTERM")
+            if (proc.pid) {
+              proc.kill("SIGTERM")
             }
 
-            process.on("exit", () => {
+            proc.on("exit", () => {
               cb(T.unit)
             })
           })
@@ -93,42 +124,6 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
 // -----------------------------------------------------------------------------
 // Destructors
 // -----------------------------------------------------------------------------
-
-/**
- * Access the standard output stream of a running `Process`.
- */
-export function stdout(self: Process): ProcessStream {
-  return new ProcessStream(() => self.process.stdout)
-}
-
-/**
- * Access the standard error stream of a running `Process`.
- */
-export function stderr(self: Process): ProcessStream {
-  return new ProcessStream(() => self.process.stderr)
-}
-
-/**
- * Access the underlying NodeJS `ChildProcess` wrapped in an `Effect`.
- */
-export function execute_<T>(
-  self: Process,
-  f: (process: NodeJSChildProcess) => T
-): T.IO<CE.CommandError, T> {
-  return T.refineOrDie_(
-    T.succeedWith(() => f(self.process)),
-    CE.isIOError
-  )
-}
-
-/**
- * Access the underlying NodeJS `ChildProcess` wrapped in an `Effect`.
- *
- * @dataFirst execute_
- */
-export function execute<T>(f: (process: NodeJSChildProcess) => T) {
-  return (self: Process): T.IO<CE.CommandError, T> => execute_(self, f)
-}
 
 /**
  * Return the exit code after the `Process` has finished executing.
@@ -165,13 +160,10 @@ export function exitCode(self: Process): T.IO<CE.CommandError, EC.ExitCode> {
  * Tests whether the process is still alive (not terminated or completed).
  */
 export function isAlive(self: Process): T.UIO<boolean> {
-  return T.orElse_(
-    execute_(
-      self,
-      (process) =>
-        process.exitCode == null && process.signalCode == null && !process.killed
-    ),
-    () => T.succeed(false)
+  return T.succeed(
+    self.process.exitCode == null &&
+      self.process.signalCode == null &&
+      !self.process.killed
   )
 }
 

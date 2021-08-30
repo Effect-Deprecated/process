@@ -1,5 +1,4 @@
 import { Tagged } from "@effect-ts/core/Case"
-import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 
 import type { ExitCode } from "../ExitCode"
@@ -47,7 +46,7 @@ export class WorkingDirectoryMissing extends Tagged("WorkingDirectoryMissing")<{
  * Refine the provided unknown value to either a `Some<IOError>`, or
  * `None`.
  */
-export function isIOError(u: unknown): Option<IOError> {
+export function isIOError(u: unknown): O.Option<IOError> {
   if (u instanceof Error) {
     return O.some(new IOError({ reason: u.message }))
   }
@@ -58,7 +57,7 @@ export function isIOError(u: unknown): Option<IOError> {
  * Refine the provided unknown value to either a `Some<ProgramNotFound>`, or
  * `None`.
  */
-export function isProgramNotFound(u: unknown): Option<ProgramNotFound> {
+export function isProgramNotFound(u: unknown): O.Option<ProgramNotFound> {
   // Handle NodeJS `SystemError`s
   if (SystemError.isSystemError(u) && u.code === "ENOENT") {
     return O.some(new ProgramNotFound({ reason: u.message }))
@@ -74,7 +73,7 @@ export function isProgramNotFound(u: unknown): Option<ProgramNotFound> {
  * Refine the provided unknown value to either a `Some<PermissionDenied>`, or
  * `None`.
  */
-export function isPermissionDenied(u: unknown): Option<PermissionDenied> {
+export function isPermissionDenied(u: unknown): O.Option<PermissionDenied> {
   // Handle NodeJS `SystemError`s
   if (SystemError.isSystemError(u) && (u.code === "EACCES" || u.code === "EPERM")) {
     return O.some(new PermissionDenied({ reason: u.message }))

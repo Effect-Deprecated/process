@@ -37,6 +37,33 @@ export class Redirect extends Tagged("Redirect")<{
 }> {}
 
 // -----------------------------------------------------------------------------
+// Constructors
+// -----------------------------------------------------------------------------
+
+/**
+ * Pass through the corresponding stdio stream to/from the parent process
+ * (either `stderr` or `stdout`).
+ */
+export const inherit: ProcessOutput = new Inherit()
+
+/**
+ * Create a pipe between the child process and the parent process (either
+ * `stderr` or `stdout`).
+ */
+export const pipe: ProcessOutput = new Pipe()
+
+/**
+ * Share a `Readable` or `Writable` `Stream` that refers to a tty, file, socket,
+ * or a pipe with the child process. The stream's underlying file descriptor
+ * is duplicated in the `ChildProcess` to the file descriptor that corresponds
+ * to the index in the stdio array. The stream must have an underlying
+ * descriptor (file streams do not until the `"open"` event has occurred).
+ */
+export function redirect(redirectTo: NodeJSWritableStream): ProcessOutput {
+  return new Redirect({ redirectTo })
+}
+
+// -----------------------------------------------------------------------------
 // Destructors
 // -----------------------------------------------------------------------------
 

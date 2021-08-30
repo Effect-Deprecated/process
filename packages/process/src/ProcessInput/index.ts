@@ -30,7 +30,7 @@ export class ProcessInput {
 /**
  * Pass through the `stdin` stream to/from the parent process.
  */
-export const Inherit: ProcessInput = new ProcessInput(O.none)
+export const inherit: ProcessInput = new ProcessInput(O.none)
 
 /**
  * Returns a `ProcessInput` from an array of `Byte`s.
