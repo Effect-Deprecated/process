@@ -398,11 +398,6 @@
   resolved "https://registry.yarnpkg.com/@effect-ts/jest/-/jest-0.29.0.tgz#da7d37bff18003ddf4a08d704896cc7c075d3015"
   integrity sha512-wPT+7Sg3coE9SGsqZMdD994daaoBTkiMtQNNiT50oOT2pArdOW7otRN3hPPpuXNqvXk0GSX6f1YViyPSfnJ9vA==
 
-"@effect-ts/node@^0.28.0":
-  version "0.28.0"
-  resolved "https://registry.yarnpkg.com/@effect-ts/node/-/node-0.28.0.tgz#7d04f6de5cf2e1e987a2195d20944d5379a1f512"
-  integrity sha512-ranX/1FgIrP7a3LlNhPAjU9tTv/YjOvvYP7Rgnq3VUllLP3UGIfWO8cgQt3JIRz2eZ2Uxrzs6cieq2c3Gh0MPw==
-
 "@effect-ts/system@^0.40.1":
   version "0.40.1"
   resolved "https://registry.yarnpkg.com/@effect-ts/system/-/system-0.40.1.tgz#6c991720dee32c5c05d961709f92f4375c9ec042"
@@ -3365,10 +3360,10 @@ eslint-plugin-jest@^24.4.0:
   dependencies:
     "@typescript-eslint/experimental-utils" "^4.0.1"
 
-eslint-plugin-prettier@^3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-prettier/-/eslint-plugin-prettier-3.4.0.tgz#cdbad3bf1dbd2b177e9825737fe63b476a08f0c7"
-  integrity sha512-UDK6rJT6INSfcOo545jiaOwB701uAIt2/dR7WnFQoGCVl1/EMqdANBmwUaqqQ45aXprsTGzSa39LI1PyuRBxxw==
+eslint-plugin-prettier@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-prettier/-/eslint-plugin-prettier-4.0.0.tgz#8b99d1e4b8b24a762472b4567992023619cb98e0"
+  integrity sha512-98MqmCJ7vJodoQK359bqQWaxOE0CS8paAz/GgjaZLyex4TTk3g9HugoO89EqWCrFiOqn9EVvcoo7gZzONCWVwQ==
   dependencies:
     prettier-linter-helpers "^1.0.0"
 
