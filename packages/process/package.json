@@ -27,12 +27,13 @@
     "@effect-ts/node": "0.31.0"
   },
   "config": {
+    "side": [],
     "modules": [
       "Command",
       "CommandError",
       "ExitCode",
+      "Internal/NodeStream",
       "Internal/SystemError",
-      "Internal/Transducer",
       "Process",
       "ProcessInput",
       "ProcessOutput",
