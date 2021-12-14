@@ -366,11 +366,8 @@ export function stringWithEncoding_(
   self: Command,
   encoding: BufferEncoding
 ): T.IO<CE.CommandError, string> {
-  return T.chain_(
-    run(self),
-    (process) =>
-      T.map_(NS.runBuffer(process.stdout), (buffer) => buffer.toString(encoding))
-    // PS.stringWithEncoding_(process.stdout, encoding)
+  return T.chain_(run(self), (process) =>
+    T.map_(NS.runBuffer(process.stdout), (buffer) => buffer.toString(encoding))
   )
 }
 
@@ -378,7 +375,7 @@ export function stringWithEncoding_(
  * Runs the command returning the entire output as a string with the
  * specified `BufferEncoding`.
  *
- * @ets_data_first string_
+ * @ets_data_first stringWithEncoding_
  */
 export function stringWithEncoding(encoding: BufferEncoding) {
   return (self: Command): T.IO<CE.CommandError, string> =>

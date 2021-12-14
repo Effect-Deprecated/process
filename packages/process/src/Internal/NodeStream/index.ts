@@ -21,7 +21,8 @@ export class ReadableError {
  * calling this with a Readable with an encoding set will `Die`.
  */
 export function streamFromReadable(
-  r: () => stream.Readable
+  r: () => stream.Readable,
+  bufferSize: number = S.DEFAULT_CHUNK_SIZE
 ): S.Stream<unknown, ReadableError, Byte.Byte> {
   return pipe(
     T.succeedWith(r),
@@ -39,8 +40,12 @@ export function streamFromReadable(
     ),
     S.chain((sr) =>
       S.async<unknown, ReadableError, Byte.Byte>((emit) => {
-        sr.on("data", (data) => {
-          emit.chunk(Byte.chunk(data))
+        sr.on("readable", () => {
+          let buffer: Buffer | null = null
+
+          while ((buffer = sr.read(bufferSize)) !== null) {
+            emit.chunk(Byte.chunk(buffer))
+          }
         })
         sr.on("end", () => {
           emit.end()

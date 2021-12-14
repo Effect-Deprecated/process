@@ -228,7 +228,11 @@ describe("Command", () => {
   it("should return non-zero exit code in success channel", () =>
     T.gen(function* (_) {
       const output = yield* _(
-        pipe(Command.command("ls", "--non-existent-flag"), Command.exitCode)
+        pipe(
+          Command.command("./non-zero-exit.sh"),
+          Command.workingDirectory(TEST_BASH_SCRIPTS_DIRECTORY),
+          Command.exitCode
+        )
       )
 
       expect(output).toEqual(ExitCode.Failure)
