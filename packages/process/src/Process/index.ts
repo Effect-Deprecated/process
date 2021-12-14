@@ -16,7 +16,6 @@ import * as CE from "../CommandError"
 import * as EC from "../ExitCode"
 import * as NS from "../Internal/NodeStream"
 import * as PO from "../ProcessOutput"
-import * as PS from "../ProcessStream"
 
 // -----------------------------------------------------------------------------
 // Model
@@ -86,58 +85,22 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
           if (proc.stderr == null) {
             resume(T.die(new Error(`Invalid process: stderr stream not found`)))
           }
-          // TODO: Remove this
-          //
-          // You can enable this block of code to see the following error in the
-          // console -
-          //
-          // Error [ERR_STREAM_PREMATURE_CLOSE]: Premature close
-          //
-          // else {
-          //   const cleanup = stream.finished(proc.stderr, (err) => {
-          //     if (err) {
-          //       console.error(`Error when stderr stream finished: ${err}`)
-          //     } else {
-          //       console.log(`Stderr stream finished`)
-          //     }
-
-          //     cleanup()
-          //   })
-          // }
           if (proc.stdout == null) {
             resume(T.die(new Error(`Invalid process: stdout stream not found`)))
           }
-          // TODO: Remove this
-          //
-          // You can enable this block of code to see the following error in the
-          // console -
-          //
-          // Error [ERR_STREAM_PREMATURE_CLOSE]: Premature close
-          //
-          // else {
-          //   const cleanup = stream.finished(proc.stdout, (err) => {
-          //     if (err) {
-          //       console.error(`Error when stdout stream finished: ${err}`)
-          //     } else {
-          //       console.log(`Stdout stream finished`)
-          //     }
-
-          //     cleanup()
-          //   })
-          // }
 
           const stdout = new stream.PassThrough()
           const stderr = new stream.PassThrough()
 
           /* eslint-disable @typescript-eslint/no-non-null-assertion */
+          const stdinSink = pipe(
+            NS.sinkFromWritable(() => proc.stdin!),
+            SK.mapError((e) => CE.fromError(e.error))
+          )
+
           if (command.redirectErrorStream) {
             proc.stdout!.pipe(stdout, { end: false })
             proc.stderr!.pipe(stdout)
-
-            const stdinSink = pipe(
-              NS.sinkFromWritable(() => proc.stdin!),
-              SK.mapError((e) => CE.fromError(e.error))
-            )
 
             const stdoutStream = pipe(
               NS.streamFromReadable(() => stdout),
@@ -157,11 +120,6 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
           } else {
             proc.stdout!.pipe(stdout)
             proc.stderr!.pipe(stderr)
-
-            const stdinSink = pipe(
-              NS.sinkFromWritable(() => proc.stdin!),
-              SK.mapError((e) => CE.fromError(e.error))
-            )
 
             const stdoutStream = pipe(
               NS.streamFromReadable(() => stdout),
@@ -213,20 +171,6 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
 // -----------------------------------------------------------------------------
 // Destructors
 // -----------------------------------------------------------------------------
-
-/**
- * Access the standard output stream.
- */
-export function stdout(self: Process): PS.ProcessStream {
-  return PS.fromReadableStream(() => self.process.stdout)
-}
-
-/**
- * Access the standard error stream.
- */
-export function stderr(self: Process): PS.ProcessStream {
-  return PS.fromReadableStream(() => self.process.stderr)
-}
 
 /**
  * Tests whether the process is still alive (not terminated or completed).
