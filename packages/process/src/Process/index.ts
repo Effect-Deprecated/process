@@ -16,7 +16,6 @@ import * as CE from "../CommandError"
 import * as EC from "../ExitCode"
 import * as NS from "../Internal/NodeStream"
 import * as PO from "../ProcessOutput"
-import * as PS from "../ProcessStream"
 
 // -----------------------------------------------------------------------------
 // Model
@@ -213,20 +212,6 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
 // -----------------------------------------------------------------------------
 // Destructors
 // -----------------------------------------------------------------------------
-
-/**
- * Access the standard output stream.
- */
-export function stdout(self: Process): PS.ProcessStream {
-  return PS.fromReadableStream(() => self.process.stdout)
-}
-
-/**
- * Access the standard error stream.
- */
-export function stderr(self: Process): PS.ProcessStream {
-  return PS.fromReadableStream(() => self.process.stderr)
-}
 
 /**
  * Tests whether the process is still alive (not terminated or completed).
