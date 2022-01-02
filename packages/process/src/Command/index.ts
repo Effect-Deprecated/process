@@ -68,7 +68,7 @@ export class PipedCommand extends Tagged("PipedCommand")<{
  * Create a command with the specified process name and an optional list of
  * arguments.
  */
-export function command(processName: string, ...args: Array<string>): Command {
+export function make(processName: string, ...args: Array<string>): Command {
   return new StandardCommand({
     command: processName,
     args: C.from(args),
