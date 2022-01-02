@@ -107,10 +107,7 @@ describe("PipedCommand", () => {
   it("should delegate stderr to the right-most command", () =>
     T.succeedWith(() => {
       const command = pipe(
-        Command.command("cat"),
-        Command.pipeTo(Command.command("sort")),
-        Command.pipeTo(Command.command("head", "-2")),
-        Command.stderr(new ProcessOutput.Inherit())
+        Command.stderr(ProcessOutput.Inherit)
       )
 
       const stderrs = pipe(
@@ -119,9 +116,9 @@ describe("PipedCommand", () => {
       )
 
       expect(C.toArray(stderrs)).toEqual([
-        new ProcessOutput.Pipe(),
-        new ProcessOutput.Pipe(),
-        new ProcessOutput.Inherit()
+        ProcessOutput.Pipe,
+        ProcessOutput.Pipe,
+        ProcessOutput.Inherit
       ])
     }))
 
@@ -140,9 +137,9 @@ describe("PipedCommand", () => {
       )
 
       expect(C.toArray(stdouts)).toEqual([
-        new ProcessOutput.Pipe(),
-        new ProcessOutput.Pipe(),
-        new ProcessOutput.Inherit()
+        ProcessOutput.Pipe,
+        ProcessOutput.Pipe,
+        ProcessOutput.Inherit
       ])
     }))
 

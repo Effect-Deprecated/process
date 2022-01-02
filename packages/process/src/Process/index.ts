@@ -7,7 +7,7 @@ import * as SK from "@effect-ts/core/Effect/Experimental/Stream/Sink"
 import { constUndefined, pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
 import type { Byte } from "@effect-ts/node/Byte"
-import type { ChildProcessWithoutNullStreams } from "child_process"
+import type { ChildProcess } from "child_process"
 import { spawn } from "child_process"
 import * as stream from "stream"
 
@@ -15,6 +15,7 @@ import type { StandardCommand } from "../Command"
 import * as CE from "../CommandError"
 import * as EC from "../ExitCode"
 import * as NS from "../Internal/NodeStream"
+import * as PI from "../ProcessInput"
 import * as PO from "../ProcessOutput"
 
 // -----------------------------------------------------------------------------
@@ -26,7 +27,7 @@ import * as PO from "../ProcessOutput"
  */
 export class Process {
   constructor(
-    readonly process: ChildProcessWithoutNullStreams,
+    readonly process: ChildProcess,
     readonly stdin: SK.Sink<unknown, unknown, Byte, CE.CommandError, Byte, number>,
     readonly stdout: S.IO<CE.CommandError, Byte>,
     readonly stderr: S.IO<CE.CommandError, Byte>
@@ -60,7 +61,7 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
       T.effectAsyncInterrupt<unknown, unknown, Process>((resume) => {
         const proc = spawn(command.command, C.toArray(command.args), {
           stdio: [
-            "pipe",
+            PI.toStdioOption(command.stdin),
             PO.toStdioOption(command.stdout),
             PO.toStdioOption(command.stderr)
           ],
@@ -68,81 +69,52 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
           env: { ...env, ...Object.fromEntries(command.env) }
         })
 
+        // If starting the process throws an error, make sure to capture it
         proc.on("error", (err) => {
+          proc.kill("SIGKILL")
           resume(T.fail(err))
         })
 
         // If the process is assigned a process identifier, then we know it
         // was spawned successfully
         if (proc.pid) {
-          // All child process readable on writable streams should be
-          // `ChildProcessWithoutNullStreams` to work properly with Effect-TS
-          // Process - this is guarded against by the options available to a
-          // `Command`, but the following sanity checks are still performed.
-          if (proc.stdin == null) {
-            resume(T.die(new Error(`Invalid process: stdin stream not found`)))
+          let stdin: SK.Sink<unknown, unknown, Byte, CE.CommandError, Byte, number> =
+            SK.drain() as any
+
+          const passThroughStderr = new stream.PassThrough()
+          const passThroughStdout = new stream.PassThrough()
+
+          if (proc.stdin !== null) {
+            stdin = pipe(
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              NS.sinkFromWritable(() => proc.stdin!),
+              SK.mapError((e) => CE.fromError(e.error))
+            )
           }
-          if (proc.stderr == null) {
-            resume(T.die(new Error(`Invalid process: stderr stream not found`)))
+          if (proc.stderr !== null) {
+            proc.stderr.pipe(passThroughStderr)
           }
-          if (proc.stdout == null) {
-            resume(T.die(new Error(`Invalid process: stdout stream not found`)))
+          if (proc.stdout !== null) {
+            if (command.redirectErrorStream) {
+              proc.stdout.pipe(passThroughStdout, { end: false })
+              passThroughStderr.pipe(passThroughStdout)
+            } else {
+              proc.stdout.pipe(passThroughStdout)
+            }
           }
 
-          const stdout = new stream.PassThrough()
-          const stderr = new stream.PassThrough()
-
-          /* eslint-disable @typescript-eslint/no-non-null-assertion */
-          const stdinSink = pipe(
-            NS.sinkFromWritable(() => proc.stdin!),
-            SK.mapError((e) => CE.fromError(e.error))
+          const stderr = command.redirectErrorStream
+            ? S.empty
+            : pipe(
+                NS.streamFromReadable(() => passThroughStderr),
+                S.mapError((e) => CE.fromError(e.error))
+              )
+          const stdout = pipe(
+            NS.streamFromReadable(() => passThroughStdout),
+            S.mapError((e) => CE.fromError(e.error))
           )
 
-          if (command.redirectErrorStream) {
-            proc.stdout!.pipe(stdout, { end: false })
-            proc.stderr!.pipe(stdout)
-
-            const stdoutStream = pipe(
-              NS.streamFromReadable(() => stdout),
-              S.mapError((e) => CE.fromError(e.error))
-            )
-
-            resume(
-              T.succeed(
-                new Process(
-                  proc as ChildProcessWithoutNullStreams,
-                  stdinSink,
-                  stdoutStream,
-                  S.empty
-                )
-              )
-            )
-          } else {
-            proc.stdout!.pipe(stdout)
-            proc.stderr!.pipe(stderr)
-
-            const stdoutStream = pipe(
-              NS.streamFromReadable(() => stdout),
-              S.mapError((e) => CE.fromError(e.error))
-            )
-
-            const stderrStream = pipe(
-              NS.streamFromReadable(() => stderr),
-              S.mapError((e) => CE.fromError(e.error))
-            )
-
-            resume(
-              T.succeed(
-                new Process(
-                  proc as ChildProcessWithoutNullStreams,
-                  stdinSink,
-                  stdoutStream,
-                  stderrStream
-                )
-              )
-            )
-          }
-          /* eslint-enable @typescript-eslint/no-non-null-assertion */
+          resume(T.succeed(new Process(proc, stdin, stdout, stderr)))
         }
 
         return T.effectAsync((resume) => {
