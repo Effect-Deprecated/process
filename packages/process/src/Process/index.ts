@@ -78,19 +78,17 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
         // If the process is assigned a process identifier, then we know it
         // was spawned successfully
         if (proc.pid) {
-          // let stdin: SK.Sink<unknown, unknown, Byte, CE.CommandError, Byte, number> =
-          //   SK.drain() as any
-          const passThroughSink = new stream.PassThrough()
+          let stdin: SK.Sink<unknown, unknown, Byte, CE.CommandError, Byte, number> =
+            SK.drain() as any
           const passThroughStderr = new stream.PassThrough()
           const passThroughStdout = new stream.PassThrough()
 
           if (proc.stdin !== null) {
-            proc.stdin.pipe(passThroughSink)
-            // stdin = pipe(
-            //   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            //   NS.sinkFromWritable(() => proc.stdin!),
-            //   SK.mapError((e) => CE.fromError(e.error))
-            // )
+            stdin = pipe(
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              NS.sinkFromWritable(() => proc.stdin!),
+              SK.mapError((e) => CE.fromError(e.error))
+            )
           }
           if (proc.stderr !== null) {
             proc.stderr.pipe(passThroughStderr)
@@ -103,12 +101,6 @@ export function start(command: StandardCommand): T.IO<CE.CommandError, Process> 
               proc.stdout.pipe(passThroughStdout)
             }
           }
-
-          const stdin = pipe(
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            NS.sinkFromWritable(() => passThroughSink),
-            SK.mapError((e) => CE.fromError(e.error))
-          )
 
           const stderr = command.redirectErrorStream
             ? S.empty
