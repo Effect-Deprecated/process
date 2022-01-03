@@ -1,7 +1,5 @@
 // ets_tracing: off
 
-import { Tagged } from "@effect-ts/system/Case"
-import { matchTag_ } from "@effect-ts/system/Utils"
 import type * as stream from "stream"
 
 import type { StdioOption } from "../Process"
@@ -20,13 +18,17 @@ export type ProcessOutput = Inherit | Pipe | Redirect
  * Pass through the corresponding stdio stream to/from the parent process
  * (either `stderr` or `stdout`).
  */
-export class Inherit extends Tagged("Inherit")<{}> {}
+export interface Inherit {
+  readonly _tag: "Inherit"
+}
 
 /**
  * Create a pipe between the child process and the parent process (either
  * `stderr` or `stdout`).
  */
-export class Pipe extends Tagged("Pipe")<{}> {}
+export interface Pipe {
+  readonly _tag: "Pipe"
+}
 
 /**
  * Share a `Readable` or `Writable` `Stream` that refers to a tty, file, socket,
@@ -35,9 +37,10 @@ export class Pipe extends Tagged("Pipe")<{}> {}
  * to the index in the stdio array. The stream must have an underlying
  * descriptor (file streams do not until the `"open"` event has occurred).
  */
-export class Redirect extends Tagged("Redirect")<{
-  redirectTo: stream.Writable
-}> {}
+export interface Redirect {
+  readonly _tag: "Redirect"
+  readonly redirectTo: stream.Writable
+}
 
 // -----------------------------------------------------------------------------
 // Constructors
@@ -47,13 +50,17 @@ export class Redirect extends Tagged("Redirect")<{
  * Pass through the corresponding stdio stream to/from the parent process
  * (either `stderr` or `stdout`).
  */
-export const inherit: ProcessOutput = new Inherit()
+export const Inherit: ProcessOutput = {
+  _tag: "Inherit"
+}
 
 /**
  * Create a pipe between the child process and the parent process (either
  * `stderr` or `stdout`).
  */
-export const pipe: ProcessOutput = new Pipe()
+export const Pipe: ProcessOutput = {
+  _tag: "Pipe"
+}
 
 /**
  * Share a `Readable` or `Writable` `Stream` that refers to a tty, file, socket,
@@ -63,7 +70,7 @@ export const pipe: ProcessOutput = new Pipe()
  * descriptor (file streams do not until the `"open"` event has occurred).
  */
 export function redirect(redirectTo: stream.Writable): ProcessOutput {
-  return new Redirect({ redirectTo })
+  return { _tag: "Redirect", redirectTo }
 }
 
 // -----------------------------------------------------------------------------
@@ -71,13 +78,16 @@ export function redirect(redirectTo: stream.Writable): ProcessOutput {
 // -----------------------------------------------------------------------------
 
 /**
- * Convert an `effect-ts/process` `ProcessOutput` to a `ChildProcess`
+ * Convert an `@effect-ts/process` `ProcessOutput` to a `ChildProcess`
  * `StdioOption`.
  */
-export function toStdioOption(processOutput: ProcessOutput): StdioOption {
-  return matchTag_(processOutput, {
-    Inherit: () => "inherit" as StdioOption,
-    Pipe: () => "pipe" as StdioOption,
-    Redirect: (redirect) => redirect.redirectTo
-  })
+export function toStdioOption(self: ProcessOutput): StdioOption {
+  switch (self._tag) {
+    case "Inherit":
+      return "inherit"
+    case "Pipe":
+      return "pipe"
+    case "Redirect":
+      return self.redirectTo
+  }
 }

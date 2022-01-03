@@ -25,14 +25,14 @@ describe("Command", () => {
 
   it("should convert stdout to a string", () =>
     T.gen(function* (_) {
-      const output = yield* _(Command.string(Command.command("echo", "-n", "test")))
+      const output = yield* _(Command.string(Command.make("echo", "-n", "test")))
 
       expect(output).toEqual("test")
     }))
 
   it("should convert stdout to a list of lines", () =>
     T.gen(function* (_) {
-      const output = yield* _(Command.lines(Command.command("echo", "-n", "1\n2\n3")))
+      const output = yield* _(Command.lines(Command.make("echo", "-n", "1\n2\n3")))
 
       expect(C.toArray(output)).toEqual(["1", "2", "3"])
     }))
@@ -40,11 +40,7 @@ describe("Command", () => {
   it("should stream lines of output", () =>
     T.gen(function* (_) {
       const output = yield* _(
-        pipe(
-          Command.command("echo", "-n", "1\n2\n3"),
-          Command.linesStream,
-          S.runCollect
-        )
+        pipe(Command.make("echo", "-n", "1\n2\n3"), Command.linesStream, S.runCollect)
       )
 
       expect(C.toArray(output)).toEqual(["1", "2", "3"])
@@ -54,7 +50,7 @@ describe("Command", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("echo", "-n", "1\n2\n3"),
+          Command.make("echo", "-n", "1\n2\n3"),
           Command.stream,
           S.mapChunks((c) => C.single(Byte.buffer(c).toString("utf-8"))),
           S.splitLines,
@@ -68,7 +64,7 @@ describe("Command", () => {
   it("should fail when trying to run a command that does not exist", () =>
     T.gen(function* (_) {
       const command = pipe(
-        Command.command("some-invalid-command", "test"),
+        Command.make("some-invalid-command", "test"),
         Command.string,
         T.mapError(TestUtils.stringifyError)
       )
@@ -84,7 +80,7 @@ describe("Command", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("bash", "-c", 'echo -n "var = $VAR"'),
+          Command.make("bash", "-c", 'echo -n "var = $VAR"'),
           Command.env(Map.make([["VAR", "value"]])),
           Command.string
         )
@@ -95,11 +91,11 @@ describe("Command", () => {
 
   it("should accept streaming stdin", () =>
     T.gen(function* (_) {
-      const stream = pipe(Command.command("echo", "-n", "a", "b", "c"), Command.stream)
+      const stream = pipe(Command.make("echo", "-n", "a", "b", "c"), Command.stream)
 
       const output = yield* _(
         pipe(
-          Command.command("cat"),
+          Command.make("cat"),
           Command.stdin(ProcessInput.fromStream(stream)),
           Command.string
         )
@@ -112,7 +108,7 @@ describe("Command", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("cat"),
+          Command.make("cat"),
           Command.stdin(ProcessInput.fromString("piped in")),
           Command.string
         )
@@ -125,7 +121,7 @@ describe("Command", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("cat"),
+          Command.make("cat"),
           Command.stdin(ProcessInput.fromString("piped in", "utf16le")),
           Command.stringWithEncoding("utf16le")
         )
@@ -138,7 +134,7 @@ describe("Command", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("ls"),
+          Command.make("ls"),
           Command.workingDirectory(path.join(__dirname, "..", "src")),
           Command.lines
         )
@@ -151,10 +147,10 @@ describe("Command", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("custom-echo", "-n", "test"),
+          Command.make("custom-echo", "-n", "test"),
           Command.string,
           T.catchTag("ProgramNotFound", () =>
-            pipe(Command.command("echo", "-n", "test"), Command.string)
+            pipe(Command.make("echo", "-n", "test"), Command.string)
           )
         )
       )
@@ -166,7 +162,7 @@ describe("Command", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("sleep", "20"),
+          Command.make("sleep", "20"),
           Command.exitCode,
           T.fork,
           T.chain((fiber) => T.fork(F.interrupt(fiber))),
@@ -182,7 +178,7 @@ describe("Command", () => {
       const testClock = yield* _(TestClock)
 
       const command = pipe(
-        Command.command("sleep", "20"),
+        Command.make("sleep", "20"),
         Command.exitCode,
         T.timeout(5000)
       )
@@ -208,7 +204,7 @@ describe("Command", () => {
   it("should capture stderr and stdout separately", () =>
     T.gen(function* (_) {
       const command = pipe(
-        Command.command("./both-streams-test.sh"),
+        Command.make("./both-streams-test.sh"),
         Command.workingDirectory(TEST_BASH_SCRIPTS_DIRECTORY)
       )
 
@@ -229,7 +225,7 @@ describe("Command", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("./non-zero-exit.sh"),
+          Command.make("./non-zero-exit.sh"),
           Command.workingDirectory(TEST_BASH_SCRIPTS_DIRECTORY),
           Command.exitCode
         )
@@ -241,7 +237,7 @@ describe("Command", () => {
   it("should throw permission denied as a typed error", () =>
     T.gen(function* (_) {
       const command = pipe(
-        Command.command("./no-permissions.sh"),
+        Command.make("./no-permissions.sh"),
         Command.workingDirectory(TEST_BASH_SCRIPTS_DIRECTORY)
       )
 
@@ -257,7 +253,7 @@ describe("Command", () => {
   it("should merge stderr into stdout when redirectErrorStream is true", () =>
     T.gen(function* (_) {
       const command = pipe(
-        Command.command("./both-streams-test.sh"),
+        Command.make("./both-streams-test.sh"),
         Command.workingDirectory(TEST_BASH_SCRIPTS_DIRECTORY),
         Command.redirectErrorStream(true)
       )
@@ -279,7 +275,7 @@ describe("Command", () => {
   it("should be able to kill a running process", () =>
     T.gen(function* (_) {
       const command = pipe(
-        Command.command("./echo-repeat.sh"),
+        Command.make("./echo-repeat.sh"),
         Command.workingDirectory(TEST_BASH_SCRIPTS_DIRECTORY)
       )
 
@@ -305,7 +301,7 @@ describe("Command", () => {
     T.gen(function* (_) {
       const exit = yield* _(
         pipe(
-          Command.command("ls"),
+          Command.make("ls"),
           Command.workingDirectory("/some/bad/path"),
           Command.lines,
           T.mapError(TestUtils.stringifyError),

@@ -16,9 +16,9 @@ describe("PipedCommand", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("echo", "2\n1\n3"),
-          Command.pipeTo(Command.command("cat")),
-          Command.pipeTo(Command.command("sort")),
+          Command.make("echo", "2\n1\n3"),
+          Command.pipeTo(Command.make("cat")),
+          Command.pipeTo(Command.make("sort")),
           Command.lines
         )
       )
@@ -29,10 +29,10 @@ describe("PipedCommand", () => {
   it("should ensure that piping is associative", () =>
     T.gen(function* (_) {
       const program = pipe(
-        Command.command("echo", "2\n1\n3"),
-        Command.pipeTo(Command.command("cat")),
-        Command.pipeTo(Command.command("sort")),
-        Command.pipeTo(Command.command("head", "-2")),
+        Command.make("echo", "2\n1\n3"),
+        Command.pipeTo(Command.make("cat")),
+        Command.pipeTo(Command.make("sort")),
+        Command.pipeTo(Command.make("head", "-2")),
         Command.lines
       )
 
@@ -51,9 +51,9 @@ describe("PipedCommand", () => {
     T.gen(function* (_) {
       const output = yield* _(
         pipe(
-          Command.command("cat"),
-          Command.pipeTo(Command.command("sort")),
-          Command.pipeTo(Command.command("head", "-2")),
+          Command.make("cat"),
+          Command.pipeTo(Command.make("sort")),
+          Command.pipeTo(Command.make("head", "-2")),
           Command.stdin(ProcessInput.fromString("2\n1\n3")),
           Command.lines
         )
@@ -67,9 +67,9 @@ describe("PipedCommand", () => {
       const env = Map.make([["key", "value"]])
 
       const command = pipe(
-        Command.command("cat"),
-        Command.pipeTo(Command.command("sort")),
-        Command.pipeTo(Command.command("head", "-2")),
+        Command.make("cat"),
+        Command.pipeTo(Command.make("sort")),
+        Command.pipeTo(Command.make("head", "-2")),
         Command.env(env)
       )
 
@@ -86,9 +86,9 @@ describe("PipedCommand", () => {
       const workingDirectory = "working-directory"
 
       const command = pipe(
-        Command.command("cat"),
-        Command.pipeTo(Command.command("sort")),
-        Command.pipeTo(Command.command("head", "-2")),
+        Command.make("cat"),
+        Command.pipeTo(Command.make("sort")),
+        Command.pipeTo(Command.make("head", "-2")),
         Command.workingDirectory(workingDirectory)
       )
 
@@ -107,10 +107,10 @@ describe("PipedCommand", () => {
   it("should delegate stderr to the right-most command", () =>
     T.succeedWith(() => {
       const command = pipe(
-        Command.command("cat"),
-        Command.pipeTo(Command.command("sort")),
-        Command.pipeTo(Command.command("head", "-2")),
-        Command.stderr(new ProcessOutput.Inherit())
+        Command.make("cat"),
+        Command.pipeTo(Command.make("sort")),
+        Command.pipeTo(Command.make("head", "-2")),
+        Command.stderr(ProcessOutput.Inherit)
       )
 
       const stderrs = pipe(
@@ -119,19 +119,19 @@ describe("PipedCommand", () => {
       )
 
       expect(C.toArray(stderrs)).toEqual([
-        new ProcessOutput.Pipe(),
-        new ProcessOutput.Pipe(),
-        new ProcessOutput.Inherit()
+        ProcessOutput.Pipe,
+        ProcessOutput.Pipe,
+        ProcessOutput.Inherit
       ])
     }))
 
   it("should delegate stdout to the right-most command", () =>
     T.succeedWith(() => {
       const command = pipe(
-        Command.command("cat"),
-        Command.pipeTo(Command.command("sort")),
-        Command.pipeTo(Command.command("head", "-2")),
-        Command.stdout(new ProcessOutput.Inherit())
+        Command.make("cat"),
+        Command.pipeTo(Command.make("sort")),
+        Command.pipeTo(Command.make("head", "-2")),
+        Command.stdout(ProcessOutput.Inherit)
       )
 
       const stdouts = pipe(
@@ -140,18 +140,18 @@ describe("PipedCommand", () => {
       )
 
       expect(C.toArray(stdouts)).toEqual([
-        new ProcessOutput.Pipe(),
-        new ProcessOutput.Pipe(),
-        new ProcessOutput.Inherit()
+        ProcessOutput.Pipe,
+        ProcessOutput.Pipe,
+        ProcessOutput.Inherit
       ])
     }))
 
   it("should delegate redirectErrorStream to the right-most command", () =>
     T.succeedWith(() => {
       const command = pipe(
-        Command.command("cat"),
-        Command.pipeTo(Command.command("sort")),
-        Command.pipeTo(Command.command("head", "-2")),
+        Command.make("cat"),
+        Command.pipeTo(Command.make("sort")),
+        Command.pipeTo(Command.make("head", "-2")),
         Command.redirectErrorStream(true)
       )
 

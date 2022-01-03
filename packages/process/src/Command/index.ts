@@ -68,15 +68,17 @@ export class PipedCommand extends Tagged("PipedCommand")<{
  * Create a command with the specified process name and an optional list of
  * arguments.
  */
-export function command(processName: string, ...args: Array<string>): Command {
+export function make(processName: string, ...args: Array<string>): Command {
   return new StandardCommand({
     command: processName,
     args: C.from(args),
     env: Map.empty,
     workingDirectory: O.emptyOf<string>(),
-    stdin: PI.inherit,
-    stdout: PO.pipe,
-    stderr: PO.pipe,
+    // The initial process input here does not matter, we just want the child
+    // process to default to `"pipe"` for the stdin stream.
+    stdin: new PI.ProcessInput(O.some(S.empty)),
+    stdout: PO.Pipe,
+    stderr: PO.Pipe,
     redirectErrorStream: false
   })
 }
@@ -222,7 +224,7 @@ export function stdout(stdout: PO.ProcessOutput) {
  * Inherit standard input, standard error, and standard output.
  */
 export function inheritIO(self: Command): Command {
-  return stdin_(stderr_(stdout_(self, PO.inherit), PO.inherit), PI.inherit)
+  return stdin_(stderr_(stdout_(self, PO.Inherit), PO.Inherit), PI.Inherit)
 }
 
 /**
@@ -257,7 +259,7 @@ export function redirectErrorStream(redirectErrorStream: boolean) {
  * Redirect standard output to a NodeJS `Writable` stream.
  */
 export function redirectStdout_(self: Command, stream: Writable): Command {
-  return stdout_(self, new PO.Redirect({ redirectTo: stream }))
+  return stdout_(self, PO.redirect(stream))
 }
 
 /**

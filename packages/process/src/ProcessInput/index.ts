@@ -8,6 +8,7 @@ import * as stream from "stream"
 
 import * as CE from "../CommandError"
 import * as NS from "../Internal/NodeStream"
+import type { StdioOption } from "../Process"
 
 // -----------------------------------------------------------------------------
 // Model
@@ -28,7 +29,7 @@ export class ProcessInput {
 /**
  * Pass through the `stdin` stream to/from the parent process.
  */
-export const inherit: ProcessInput = new ProcessInput(O.none)
+export const Inherit: ProcessInput = new ProcessInput(O.none)
 
 /**
  * Returns a `ProcessInput` from an array of `Byte`s.
@@ -60,4 +61,21 @@ export function fromString(
   encoding: BufferEncoding = "utf-8"
 ): ProcessInput {
   return new ProcessInput(O.some(S.fromChunk(Byte.chunk(Buffer.from(text, encoding)))))
+}
+
+// -----------------------------------------------------------------------------
+// Destructors
+// -----------------------------------------------------------------------------
+
+/**
+ * Convert an `@effect-ts/process` `ProcessInput` to a `ChildProcess`
+ * `StdioOption`.
+ */
+export function toStdioOption(self: ProcessInput): StdioOption {
+  switch (self.source._tag) {
+    case "None":
+      return "inherit"
+    case "Some":
+      return "pipe"
+  }
 }
