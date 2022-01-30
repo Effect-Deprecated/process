@@ -23,8 +23,8 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "@effect-ts/core": "0.48.5",
-    "@effect-ts/node": "0.31.0"
+    "@effect-ts/core": "0.53.0",
+    "@effect-ts/node": "0.36.0"
   },
   "config": {
     "side": [],
