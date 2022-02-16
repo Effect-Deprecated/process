@@ -7,8 +7,8 @@ import { pipe } from "@effect-ts/core/Function"
 import * as Byte from "@effect-ts/node/Byte"
 import type * as stream from "stream"
 
-import * as CE from "../CommandError"
-import * as NS from "../Internal/NodeStream"
+import * as CE from "../CommandError/index.js"
+import * as NS from "../Internal/NodeStream/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

@@ -3,8 +3,8 @@
 import { Tagged } from "@effect-ts/core/Case"
 import * as O from "@effect-ts/core/Option"
 
-import type { ExitCode } from "../ExitCode"
-import * as SystemError from "../Internal/SystemError"
+import type { ExitCode } from "../ExitCode/index.js"
+import * as SystemError from "../Internal/SystemError/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

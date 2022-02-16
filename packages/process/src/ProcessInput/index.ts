@@ -6,9 +6,9 @@ import * as O from "@effect-ts/core/Option"
 import * as Byte from "@effect-ts/node/Byte"
 import * as stream from "stream"
 
-import * as CE from "../CommandError"
-import * as NS from "../Internal/NodeStream"
-import type { StdioOption } from "../Process"
+import * as CE from "../CommandError/index.js"
+import * as NS from "../Internal/NodeStream/index.js"
+import type { StdioOption } from "../Process/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

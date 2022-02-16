@@ -13,13 +13,13 @@ import type { Byte } from "@effect-ts/node/Byte"
 import * as FileSystem from "fs"
 import type { Writable } from "stream"
 
-import * as CE from "../CommandError"
-import type { ExitCode } from "../ExitCode"
-import * as NS from "../Internal/NodeStream"
-import * as P from "../Process"
-import * as PI from "../ProcessInput"
-import * as PO from "../ProcessOutput"
-import * as PS from "../ProcessStream"
+import * as CE from "../CommandError/index.js"
+import type { ExitCode } from "../ExitCode/index.js"
+import * as NS from "../Internal/NodeStream/index.js"
+import * as P from "../Process/index.js"
+import * as PI from "../ProcessInput/index.js"
+import * as PO from "../ProcessOutput/index.js"
+import * as PS from "../ProcessStream/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

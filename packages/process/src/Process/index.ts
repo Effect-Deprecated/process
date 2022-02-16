@@ -11,12 +11,12 @@ import type { ChildProcess } from "child_process"
 import { spawn } from "child_process"
 import * as stream from "stream"
 
-import type { StandardCommand } from "../Command"
-import * as CE from "../CommandError"
-import * as EC from "../ExitCode"
-import * as NS from "../Internal/NodeStream"
-import * as PI from "../ProcessInput"
-import * as PO from "../ProcessOutput"
+import type { StandardCommand } from "../Command/index.js"
+import * as CE from "../CommandError/index.js"
+import * as EC from "../ExitCode/index.js"
+import * as NS from "../Internal/NodeStream/index.js"
+import * as PI from "../ProcessInput/index.js"
+import * as PO from "../ProcessOutput/index.js"
 
 // -----------------------------------------------------------------------------
 // Model
