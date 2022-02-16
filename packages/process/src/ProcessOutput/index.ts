@@ -2,7 +2,7 @@
 
 import type * as stream from "stream"
 
-import type { StdioOption } from "../Process"
+import type { StdioOption } from "../Process/index.js"
 
 // -----------------------------------------------------------------------------
 // Model
