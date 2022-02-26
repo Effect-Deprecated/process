@@ -1,6 +1,6 @@
 import { matchTag_ } from "@effect-ts/core/Utils"
 
-import type { CommandError } from "../src/CommandError"
+import type { CommandError } from "../src/CommandError/index.js"
 
 /**
  * Convert a `CommandError` to a string.

@@ -5,9 +5,9 @@ import * as O from "@effect-ts/core/Option"
 import * as TE from "@effect-ts/jest/Test"
 import { pipe } from "@effect-ts/system/Function"
 
-import * as Command from "../src/Command"
-import * as ProcessInput from "../src/ProcessInput"
-import * as ProcessOutput from "../src/ProcessOutput"
+import * as Command from "../src/Command/index.js"
+import * as ProcessInput from "../src/ProcessInput/index.js"
+import * as ProcessOutput from "../src/ProcessOutput/index.js"
 
 describe("PipedCommand", () => {
   const { it } = TE.runtime()

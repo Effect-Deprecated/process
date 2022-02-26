@@ -11,12 +11,12 @@ import * as Byte from "@effect-ts/node/Byte"
 import { TestClock } from "@effect-ts/system/Testing/TestClock"
 import * as path from "path"
 
-import * as Command from "../src/Command"
-import * as ExitCode from "../src/ExitCode"
-import * as Process from "../src/Process"
-import * as ProcessInput from "../src/ProcessInput"
-import * as ProcessStream from "../src/ProcessStream"
-import * as TestUtils from "./test-utils"
+import * as Command from "../src/Command/index.js"
+import * as ExitCode from "../src/ExitCode/index.js"
+import * as Process from "../src/Process/index.js"
+import * as ProcessInput from "../src/ProcessInput/index.js"
+import * as ProcessStream from "../src/ProcessStream/index.js"
+import * as TestUtils from "./test-utils.js"
 
 const TEST_BASH_SCRIPTS_DIRECTORY = path.join(__dirname, "bash")
 
