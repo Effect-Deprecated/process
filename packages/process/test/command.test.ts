@@ -313,4 +313,18 @@ describe("Command", () => {
         Ex.fail("WorkingDirectoryMissing: /some/bad/path")
       )
     }))
+
+  it("should successfulExitCode", () =>
+    T.gen(function* (_) {
+      const exit = yield* _(
+        pipe(
+          Command.make("ls"),
+          Command.workingDirectory("."),
+          Command.successfulExitCode,
+          T.result
+        )
+      )
+
+      expect(Ex.untraced(exit)).toEqual(Ex.succeed(new ExitCode.ExitCode(0)))
+    }))
 })

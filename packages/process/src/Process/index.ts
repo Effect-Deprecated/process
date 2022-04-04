@@ -235,7 +235,7 @@ export function exitCode(self: Process): T.IO<CE.CommandError, EC.ExitCode> {
 export function successfulExitCode(self: Process): T.IO<CE.CommandError, EC.ExitCode> {
   return T.filterOrElse_(
     exitCode(self),
-    (exitCode): exitCode is EC.ExitCode => exitCode === EC.Success,
+    (exitCode): exitCode is EC.ExitCode => exitCode.code === EC.Success.code,
     (exitCode) => T.fail(new CE.NonZeroExitCode({ exitCode }))
   )
 }
