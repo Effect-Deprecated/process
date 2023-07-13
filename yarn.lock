@@ -580,10 +580,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@effect-ts/tracing-plugin@npm:^0.19.0":
-  version: 0.19.0
-  resolution: "@effect-ts/tracing-plugin@npm:0.19.0"
-  checksum: 00f7ae11dc859f11507703920613b381fd7c69e60f0abae17ac2d0c8105286d6d8f6112625a46a39e6ab75f3cf4b08a4eaf2d99717db7b514b05b8e2f11950b7
+"@effect-ts/tracing-plugin@npm:^0.20.0":
+  version: 0.20.0
+  resolution: "@effect-ts/tracing-plugin@npm:0.20.0"
+  checksum: c2cd8ff1563644f8f98e659d95a0dab1ae3a5c9d87cff9acaae2045396e72a521cff54d55da9b0988ff0b4e44d5030e8b9f4ec3945586ce25f6c63b8565310f7
   languageName: node
   linkType: hard
 
@@ -4415,7 +4415,7 @@ __metadata:
     "@effect-ts/jest": ^0.35.2
     "@effect-ts/node": 0.38.3
     "@effect-ts/printer": 0.13.0
-    "@effect-ts/tracing-plugin": ^0.19.0
+    "@effect-ts/tracing-plugin": ^0.20.0
     "@types/cpx": ^1.5.2
     "@types/glob": ^7.2.0
     "@types/jest": ^27.4.1
